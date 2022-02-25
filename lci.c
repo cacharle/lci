@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <ctype.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 enum expr_tag
 {
@@ -32,6 +35,12 @@ typedef struct expr
     };
 } expr_t;
 
+typedef struct
+{
+    char *name;
+    expr_t *expr;
+} binding_t;
+
 expr_t *expr_new(enum expr_tag tag)
 {
     expr_t *expr = malloc(sizeof(expr_t));
@@ -44,13 +53,18 @@ expr_t *expr_new(enum expr_tag tag)
 
 void expr_print(expr_t *expr)
 {
+    if (expr == NULL)
+    {
+        fputs("expr_print: expr is NULL\n", stderr);
+        abort();
+    }
     switch (expr->tag)
     {
         case EXPR_VAR:
-            printf("%s", expr->var.name, stdout);
+            printf("%s", expr->var.name);
             break;
         case EXPR_FUNC:
-            printf("\\%s. ", expr->func.param_name, stdout);
+            printf("\\%s. ", expr->func.param_name);
             expr_print(expr->func.body);
             break;
         case EXPR_LIST:
@@ -134,10 +148,52 @@ expr_t *parse_expr(char *s, char **end)
     }
 }
 
+
+binding_t *stack = NULL;
+size_t stack_len = 0;
+binding_t *globals = NULL;
+size_t globals_len = 0;
+
+expr_t *reduce(expr_t *expr)
+{
+    switch (expr->tag)
+    {
+        case EXPR_VAR:
+            for (size_t i = stack_len; i > 0; i--)
+                if (strcmp(stack[i - 1].name, expr->var.name) == 0)
+                    return reduce(stack[i - 1].expr);
+            for (size_t i = globals_len; i > 0; i--)
+                if (strcmp(globals[i - 1].name, expr->var.name) == 0)
+                    return reduce(globals[i - 1].expr);
+            return expr;
+        case EXPR_FUNC:
+            expr->func.body = reduce(expr->func.body);
+            return expr;
+        case EXPR_LIST:
+            if (expr->list.len == 1)
+                return expr->list.exprs[0];
+            for (size_t i = 0; i < expr->list.len; i++)
+                expr->list.exprs[i] = reduce(expr->list.exprs[i]);
+            expr_t *called = expr->list.exprs[0];
+            expr_t *arg = expr->list.exprs[1];
+            stack = realloc(stack, sizeof(binding_t) * ++stack_len);
+            stack[stack_len - 1].name = called->func.param_name;
+            stack[stack_len - 1].expr = arg;
+            expr_t *result = reduce(called->func.body);
+            expr->list.exprs[0] = result;
+            expr->list.len--;
+            memmove(&expr->list.exprs[1], &expr->list.exprs[2], expr->list.len);
+            return reduce(expr);
+    }
+
+    return NULL;
+}
+
 // expr_t *parse_statement(char *s, char **end)
 // {
-//     expr_t *result = parse_expr(s, end);
-//     if (result != NULL)
+//     if (strstr(":=", s) == NULL)
+//     char *dest = parse_sym(s, end);
+//     if (dest != NULL)
 //         return result;
 //     char *sym;
 //     parse_sym(&s, &sym);
@@ -154,11 +210,42 @@ expr_t *parse_expr(char *s, char **end)
  * name ::= any visible character except '(' ')' '.' and '\'
  */
 
-int main()
+int main(int argc, char **argv)
 {
-    char *end;
-    expr_t *expr = parse_list("\\x. \\f. f x", &end);
-    expr_print(expr);
+    if (argc == 3 && strcmp(argv[1], "-c") == 0)
+    {
+        char *x;
+        expr_t *expr = parse_list(argv[2], &x);
+        expr_print(expr);
+        expr = reduce(expr);
+        fputc('\n', stdout);
+        expr_print(expr);
+        fputc('\n', stdout);
+        return 0;
+    }
+
+    char *line = NULL;
+    while (true)
+    {
+        free(line);
+        line = readline("λ ");
+        if (line == NULL || strcmp(line, ":q") == 0)
+            break;
+        add_history(line);
+        char *x;
+        expr_t *expr = parse_list(line, &x);
+        expr_print(expr);
+        expr = reduce(expr);
+        fputc('\n', stdout);
+        expr_print(expr);
+        fputc('\n', stdout);
+        fputc('\n', stdout);
+    }
+    free(line);
+
+    // char *end;
+    // expr_t *expr = parse_list("\\x. \\f. f x", &end);
+    // expr_print(expr);
     // printf("expr=%p\n", expr);
     // printf("expr.tag=%d\n", expr->tag);
     // if (expr->tag == EXPR_VAR)
