@@ -8,26 +8,26 @@
 #include <stdlib.h>
 #include <string.h>
 
-void
-eval_print(char *s)
-{
-    parse_result_t result;
-    parse(&result, s);
-    if (result->tag == PARSE_STMT)
-    {
-        result->stmt.expr = reduce(result->stmt.expr);
-        push_binding(&globals, &globals_len, parsed->stmt.name, parsed->stmt->expr);
-        return;
-        // skip_spaces(&s);
-        // char *name = parse_sym(s, &s);
-        // if (name != NULL)
-        //     abort();
-        // skip_spaces(&s);
-        // if (strncmp(s, ":=", 2) != 0)
-        //     abort();
-    }
-    expr_println(reduce(parse(s)));
-}
+// void
+// eval_print(char *s)
+// {
+//     parse_result_t result;
+//     parse(&result, s);
+//     if (result->tag == PARSE_STMT)
+//     {
+//         result->stmt.expr = reduce(result->stmt.expr);
+//         push_binding(&globals, &globals_len, parsed->stmt.name,
+//         parsed->stmt->expr); return;
+//         // skip_spaces(&s);
+//         // char *name = parse_sym(s, &s);
+//         // if (name != NULL)
+//         //     abort();
+//         // skip_spaces(&s);
+//         // if (strncmp(s, ":=", 2) != 0)
+//         //     abort();
+//     }
+//     expr_println(reduce(parse(s)));
+// }
 
 /*
  * func ::= \<name>. <expr>
@@ -41,7 +41,7 @@ main(int argc, char **argv)
 {
     if (argc == 3 && strcmp(argv[1], "-c") == 0)
     {
-        eval_print(argv[2]);
+        // eval_print(argv[2]);
         return 0;
     }
 
@@ -53,7 +53,7 @@ main(int argc, char **argv)
         if (line == NULL || strcmp(line, ":q") == 0)
             break;
         add_history(line);
-        eval_print(line);
+        // eval_print(line);
         fputc('\n', stdout);
     }
     free(line);

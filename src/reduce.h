@@ -14,10 +14,14 @@ typedef struct
 
 typedef struct
 {
-    binding_t *stack;
-    size_t     stack_len;
-    binding_t *globals;
-    size_t     globals_len;
+    binding_t *exprs;
+    size_t     len;
+} bindings_t;
+
+typedef struct
+{
+    bindings_t stack;
+    bindings_t globals;
 } env_t;
 
 expr_t *
