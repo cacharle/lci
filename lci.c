@@ -83,6 +83,18 @@ void expr_print(expr_t *expr)
     }
 }
 
+void expr_println(expr_t *expr)
+{
+    expr_print(expr);
+    fputc('\n', stdout);
+}
+
+void skip_spaces(char **s)
+{
+    while (isspace(**s))
+        (*s)++;
+}
+
 char *parse_sym(char *s, char **end)
 {
     char *curr = s;
@@ -115,8 +127,7 @@ expr_t *parse_list(char *s, char **end)
 
 expr_t *parse_expr(char *s, char **end)
 {
-    while (isspace(*s))
-        s++;
+    skip_spaces(&s);
     if (*s == '\\')
     {
         expr_t *expr = expr_new(EXPR_FUNC);
@@ -148,11 +159,33 @@ expr_t *parse_expr(char *s, char **end)
     }
 }
 
+expr_t *parse(char *s)
+{
+    char *end;
+    expr_t *expr = parse_list(s, &end);
+    skip_spaces(&end);
+    if (*end != '\0')
+    {
+        fprintf(stderr, "extra characters `%s`\n", end);
+        abort();
+    }
+    return expr;
+}
 
 binding_t *stack = NULL;
 size_t stack_len = 0;
 binding_t *globals = NULL;
 size_t globals_len = 0;
+
+void push_binding(binding_t **bindings, size_t *bindings_len, char *name, expr_t *expr)
+{
+    size_t len = *bindings_len;
+    len++;
+    *bindings = realloc(*bindings, sizeof(binding_t) * len);
+    (*bindings)[len - 1].name = name;
+    (*bindings)[len - 1].expr = expr;
+    *bindings_len = len;
+}
 
 expr_t *reduce(expr_t *expr)
 {
@@ -172,36 +205,45 @@ expr_t *reduce(expr_t *expr)
         case EXPR_LIST:
             if (expr->list.len == 1)
                 return expr->list.exprs[0];
-            for (size_t i = 0; i < expr->list.len; i++)
-                expr->list.exprs[i] = reduce(expr->list.exprs[i]);
-            expr_t *called = expr->list.exprs[0];
-            expr_t *arg = expr->list.exprs[1];
-            stack = realloc(stack, sizeof(binding_t) * ++stack_len);
-            stack[stack_len - 1].name = called->func.param_name;
-            stack[stack_len - 1].expr = arg;
+            // for (size_t i = 0; i < expr->list.len; i++)
+            //     expr->list.exprs[i] = reduce(expr->list.exprs[i]);
+            expr_t *called = reduce(expr->list.exprs[0]);
+            if (called->tag != EXPR_FUNC)
+                return called;
+            expr_t *arg = reduce(expr->list.exprs[1]);
+            push_binding(
+                &stack,
+                &stack_len,
+                called->func.param_name,
+                arg
+            );
             expr_t *result = reduce(called->func.body);
+            stack_len--;
             expr->list.exprs[0] = result;
             expr->list.len--;
             memmove(&expr->list.exprs[1], &expr->list.exprs[2], expr->list.len);
             return reduce(expr);
     }
-
     return NULL;
 }
 
-// expr_t *parse_statement(char *s, char **end)
-// {
-//     if (strstr(":=", s) == NULL)
-//     char *dest = parse_sym(s, end);
-//     if (dest != NULL)
-//         return result;
-//     char *sym;
-//     parse_sym(&s, &sym);
-//     check_has_assignment_op(&s); // :=
-//     expr_t *expr = parse_expression(s, end);
-//     env_assign(sym, expr);
-//     return NULL;
-// }
+void eval_print(char *s)
+{
+    if (strstr(s, ":=") != NULL)
+    {
+        skip_spaces(&s);
+        char *name = parse_sym(s, &s);
+        if (name != NULL)
+            abort();
+        skip_spaces(&s);
+        if (strncmp(s, ":=", 2) != 0)
+            abort();
+        expr_t *expr = reduce(parse(s));
+        push_binding(&globals, &globals_len, name, expr);
+        return;
+    }
+    expr_println(reduce(parse(s)));
+}
 
 /*
  * func ::= \<name>. <expr>
@@ -214,13 +256,7 @@ int main(int argc, char **argv)
 {
     if (argc == 3 && strcmp(argv[1], "-c") == 0)
     {
-        char *x;
-        expr_t *expr = parse_list(argv[2], &x);
-        expr_print(expr);
-        expr = reduce(expr);
-        fputc('\n', stdout);
-        expr_print(expr);
-        fputc('\n', stdout);
+        eval_print(argv[2]);
         return 0;
     }
 
@@ -232,34 +268,9 @@ int main(int argc, char **argv)
         if (line == NULL || strcmp(line, ":q") == 0)
             break;
         add_history(line);
-        char *x;
-        expr_t *expr = parse_list(line, &x);
-        expr_print(expr);
-        expr = reduce(expr);
-        fputc('\n', stdout);
-        expr_print(expr);
-        fputc('\n', stdout);
+        eval_print(line);
         fputc('\n', stdout);
     }
     free(line);
-
-    // char *end;
-    // expr_t *expr = parse_list("\\x. \\f. f x", &end);
-    // expr_print(expr);
-    // printf("expr=%p\n", expr);
-    // printf("expr.tag=%d\n", expr->tag);
-    // if (expr->tag == EXPR_VAR)
-    //     printf("expr.var.name=%s\n", expr->var.name);
-    // if (expr->tag == EXPR_FUNC)
-    // {
-    //     printf("expr.func.param_name=%s\n", expr->func.param_name);
-    //     printf("expr.func.body=%p\n", expr->func.body);
-    // }
-    // if (expr->tag == EXPR_LIST)
-    // {
-    //     printf("expr.list.len=%zu\n", expr->list.len);
-    //
-    // }
-    // printf("end=%s\n", end);
     return 0;
 }
