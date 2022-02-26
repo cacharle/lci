@@ -144,3 +144,13 @@ Test(parse, error_func_not_dot)
     cr_assert_str_eq(expr->error.location, s + strlen("\\foo"));
     expr_destroy(expr);
 }
+
+Test(parse, spaces)
+{
+    expr_t *expr = parse(" \t \t  foo   \t\t \t ");
+    expr_print_tree(expr);
+    cr_assert_not_null(expr);
+    cr_assert_eq(expr->tag, EXPR_VAR);
+    cr_assert_str_eq(expr->var.name, "foo");
+    expr_destroy(expr);
+}

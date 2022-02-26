@@ -8,5 +8,7 @@
 
 expr_t *
 parse(char *s);
+void
+parse_error_print(enum parse_error kind, char *location, const char *origin);
 
 #endif

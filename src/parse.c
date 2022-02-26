@@ -45,6 +45,7 @@ parse_list(char *s, char **end)
         expr->list.exprs =
             realloc(expr->list.exprs, sizeof(expr_t) * expr->list.len);
         expr_t *sub_expr = parse_expr(s, &s);
+        skip_spaces(&s);
         if (sub_expr == NULL)
             return NULL;
         if (sub_expr->tag == EXPR_PARSE_ERROR)
@@ -118,4 +119,28 @@ parse(char *s)
         return error(PARSE_ERR_EXTRA_CHARACTER, end);
     }
     return expr;
+}
+
+static const char *parse_error_lookup[] = {
+    [PARSE_ERR_EXTRA_CHARACTER] = "Extra characters",
+    [PARSE_ERR_UNEXPECTED_END] = "Unexpected end",
+    [PARSE_ERR_MISSING_CLOSING_PARENTHESIS] = "Missing closing parenthesis",
+    [PARSE_ERR_MISSING_OPENING_PARENTHESIS] = "Missing closing parenthesis",
+    [PARSE_ERR_MISSING_DOT_SEPARATOR] = "Missing function '.' separator",
+};
+
+void
+parse_error_print(enum parse_error kind, char *location, const char *origin)
+{
+    fprintf(stderr, "Error: %s\n", parse_error_lookup[kind]);
+    fprintf(stderr, "%s\n", origin);
+    if (location != NULL)
+    {
+        for (; origin != location; origin++)
+            fputc(' ', stderr);
+        fputs("\e[1m\e[31m", stderr); // bold+red
+        fputc('^', stderr);
+        fputs("\e[0m", stderr);
+        fputc('\n', stderr);
+    }
 }
