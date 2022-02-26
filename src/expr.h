@@ -37,6 +37,8 @@ typedef struct expr
 expr_t *
 expr_new(enum expr_tag tag);
 void
+expr_destroy(expr_t *expr);
+void
 expr_print(expr_t *expr);
 void
 expr_println(expr_t *expr);

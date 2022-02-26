@@ -12,6 +12,27 @@ expr_new(enum expr_tag tag)
 }
 
 void
+expr_destroy(expr_t *expr)
+{
+    switch (expr->tag)
+    {
+        case EXPR_FUNC:
+            free(expr->func.param_name);
+            expr_destroy(expr->func.body);
+            break;
+        case EXPR_VAR:
+            free(expr->var.name);
+            break;
+        case EXPR_LIST:
+            for (size_t i = 0; i < expr->list.len; i++)
+                expr_destroy(expr->list.exprs[i]);
+            free(expr->list.exprs);
+            break;
+    }
+    free(expr);
+}
+
+void
 expr_print(expr_t *expr)
 {
     if (expr == NULL)

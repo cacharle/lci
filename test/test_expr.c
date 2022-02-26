@@ -1,3 +1,5 @@
+#define _POSIX_C_SOURCE 200809L
+#include <string.h>
 #include <criterion/criterion.h>
 #include "expr.h"
 
@@ -8,6 +10,7 @@ Test(expr, new_func)
     cr_assert_eq(expr->tag, EXPR_FUNC);
     cr_assert_null(expr->func.param_name);
     cr_assert_null(expr->func.body);
+    free(expr);
 }
 
 Test(expr, new_var)
@@ -16,6 +19,7 @@ Test(expr, new_var)
     cr_assert_not_null(expr);
     cr_assert_eq(expr->tag, EXPR_VAR);
     cr_assert_null(expr->var.name);
+    free(expr);
 }
 
 Test(expr, new_list)
@@ -25,4 +29,33 @@ Test(expr, new_list)
     cr_assert_eq(expr->tag, EXPR_LIST);
     cr_assert_eq(expr->list.len, 0);
     cr_assert_null(expr->list.exprs);
+    free(expr);
+}
+
+Test(expr, destroy_func)
+{
+    expr_t *expr = expr_new(EXPR_FUNC);
+    expr->func.param_name = strdup("foo");
+    expr->func.body = expr_new(EXPR_VAR);
+    expr->func.body->var.name = strdup("bar");
+    expr_destroy(expr);
+}
+
+Test(expr, destroy_var)
+{
+    expr_t *expr = expr_new(EXPR_VAR);
+    expr->var.name = strdup("bar");
+    expr_destroy(expr);
+}
+
+Test(expr, destroy_list)
+{
+    expr_t *expr = expr_new(EXPR_LIST);
+    expr->list.len = 2;
+    expr->list.exprs = malloc(sizeof(expr_t*) * expr->list.len);
+    expr->list.exprs[0] = expr_new(EXPR_VAR);
+    expr->list.exprs[0]->var.name = strdup("foo");
+    expr->list.exprs[1] = expr_new(EXPR_VAR);
+    expr->list.exprs[1]->var.name = strdup("bar");
+    expr_destroy(expr);
 }
