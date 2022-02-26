@@ -37,8 +37,47 @@ expr_destroy(expr_t *expr)
     free(expr);
 }
 
+expr_t *
+expr_clone(const expr_t *expr)
+{
+    expr_t *clone = malloc(sizeof(expr_t));
+    if (clone == NULL)
+        return NULL;
+    memcpy(clone, expr, sizeof(expr_t));
+    return clone;
+}
+
+bool
+expr_eq(const expr_t *a, const expr_t *b)
+{
+    if (a->tag != b->tag)
+        return false;
+    switch (a->tag)
+    {
+    case EXPR_FUNC:
+        return strcmp(a->func.param_name, b->func.param_name) == 0 &&
+            expr_eq(a->func.body, b->func.body);
+    case EXPR_VAR:
+        return strcmp(a->var.name, b->var.name) == 0;
+    case EXPR_LIST:
+        if (a->list.len != b->list.len)
+            return false;
+        for (size_t i = 0; i < a->list.len; i++)
+            if (!expr_eq(a->list.exprs[i], b->list.exprs[i]))
+                return false;
+        return true;
+    case EXPR_STMT:
+        return strcmp(a->stmt.name, b->stmt.name) == 0 &&
+            expr_eq(a->stmt.expr, b->stmt.expr);
+    case EXPR_PARSE_ERROR:
+        return a->error.kind == b->error.kind &&
+            a->error.location == b->error.location;
+    }
+    return false;
+}
+
 void
-expr_print(expr_t *expr)
+expr_print(const expr_t *expr)
 {
     if (expr == NULL)
     {
@@ -77,14 +116,14 @@ expr_print(expr_t *expr)
 }
 
 void
-expr_println(expr_t *expr)
+expr_println(const expr_t *expr)
 {
     expr_print(expr);
     fputc('\n', stdout);
 }
 
 static void
-expr_print_tree_rec(expr_t *expr, size_t indent)
+expr_print_tree_rec(const expr_t *expr, size_t indent)
 {
     for (size_t i = 0; i < indent; i++)
         fputc(' ', stdout);
@@ -114,7 +153,7 @@ expr_print_tree_rec(expr_t *expr, size_t indent)
 }
 
 void
-expr_print_tree(expr_t *expr)
+expr_print_tree(const expr_t *expr)
 {
     expr_print_tree_rec(expr, 0);
 }

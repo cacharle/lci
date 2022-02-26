@@ -135,9 +135,21 @@ Test(reduce, stmt_true_false_reversed)
     cr_assert_str_eq(expr->func.body->func.body->var.name, "x");
 }
 
-Test(reduce, stmt_circular_reduce)
+Test(reduce, stmt_circular_reduce_with_true)
 {
     cr_skip();
-    reduce(parse("TRUE  := \\x. \\y. x"));
-    expr_t *expr = reduce(parse("TRUE TRUE"));
+    reduce(parse("TRUE := \\x. \\y. x"));
+    expr_t *expr = reduce(parse("TRUE TRUE TRUE"));
+    (void)expr;
+}
+
+Test(reduce, stmt_circular_reduce_with_id)
+{
+    reduce(parse("ID := \\x. x"));
+    expr_t *expr = reduce(parse("ID ID"));
+    cr_assert_not_null(expr);
+    cr_assert_eq(expr->tag, EXPR_FUNC);
+    cr_assert_str_eq(expr->func.param_name, "x");
+    cr_assert_eq(expr->func.body->tag, EXPR_VAR);
+    cr_assert_str_eq(expr->func.body->var.name, "x");
 }

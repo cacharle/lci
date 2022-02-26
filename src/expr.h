@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 enum parse_error
 {
@@ -59,11 +60,15 @@ expr_t *
 expr_new(enum expr_tag tag);
 void
 expr_destroy(expr_t *expr);
+expr_t *
+expr_clone(const expr_t *expr);
+bool
+expr_eq(const expr_t *a, const expr_t *b);
 void
-expr_print(expr_t *expr);
+expr_print(const expr_t *expr);
 void
-expr_println(expr_t *expr);
+expr_println(const expr_t *expr);
 void
-expr_print_tree(expr_t *expr);
+expr_print_tree(const expr_t *expr);
 
 #endif
