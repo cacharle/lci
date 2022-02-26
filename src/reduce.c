@@ -48,10 +48,12 @@ reduce(expr_t *expr)
     case EXPR_LIST:
         if (expr->list.len == 1)
             return expr->list.exprs[0];
-        expr_t *called = reduce(expr->list.exprs[0]);
+        for (size_t i = 0; i < expr->list.len; i++)
+            expr->list.exprs[i] = reduce(expr->list.exprs[i]);
+        expr_t *called = expr->list.exprs[0];
         if (called->tag != EXPR_FUNC)
-            return called;
-        expr_t *arg = reduce(expr->list.exprs[1]);
+            return expr;
+        expr_t *arg = expr->list.exprs[1];
         bindings_push(&env.stack, called->func.param_name, arg);
         expr_t *result = reduce(called->func.body);
         env.stack.len--;

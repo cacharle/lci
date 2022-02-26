@@ -28,6 +28,10 @@ eval_print(char *s)
 int
 main(int argc, char **argv)
 {
+    reduce(parse("TRUE  := \\x. \\y. x"));
+    expr_t *expr = reduce(parse("TRUE TRUE"));
+    expr_print(expr);
+    return 0;
     if (argc == 3 && strcmp(argv[1], "-c") == 0)
     {
         eval_print(argv[2]);
