@@ -1,4 +1,6 @@
 test_sources = files(
+  'test_expr.c',
+  '../src/expr.c',
 )
 
 cc = meson.get_compiler('c')
