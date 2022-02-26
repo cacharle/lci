@@ -7,8 +7,11 @@
 
 enum parse_error
 {
-    PARSE_ERR_MEMORY,
     PARSE_ERR_EXTRA_CHARACTER,
+    PARSE_ERR_UNEXPECTED_END,
+    PARSE_ERR_MISSING_CLOSING_PARENTHESIS,
+    PARSE_ERR_MISSING_OPENING_PARENTHESIS,
+    PARSE_ERR_MISSING_DOT_SEPARATOR,
 };
 
 enum expr_tag
@@ -41,7 +44,7 @@ typedef struct expr
         } list;
         struct
         {
-            char   *name;
+            char        *name;
             struct expr *expr;
         } stmt;
         struct
@@ -60,5 +63,7 @@ void
 expr_print(expr_t *expr);
 void
 expr_println(expr_t *expr);
+void
+expr_print_tree(expr_t *expr);
 
 #endif

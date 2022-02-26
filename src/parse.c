@@ -1,5 +1,16 @@
 #include "parse.h"
 
+static expr_t *
+error(enum parse_error kind, char *location)
+{
+    expr_t *expr = expr_new(EXPR_PARSE_ERROR);
+    if (expr == NULL)
+        return NULL;
+    expr->error.kind = kind;
+    expr->error.location = location;
+    return expr;
+}
+
 void
 skip_spaces(char **s)
 {
@@ -35,10 +46,19 @@ parse_list(char *s, char **end)
             realloc(expr->list.exprs, sizeof(expr_t) * expr->list.len);
         expr_t *sub_expr = parse_expr(s, &s);
         if (sub_expr == NULL)
-            abort();
+            return NULL;
+        if (sub_expr->tag == EXPR_PARSE_ERROR)
+            return sub_expr;
         expr->list.exprs[expr->list.len - 1] = sub_expr;
     }
     *end = s;
+    if (expr->list.len == 1)
+    {
+        expr_t *ret = expr->list.exprs[0];
+        expr->list.len--;
+        expr_destroy(expr);
+        return ret;
+    }
     return expr;
 }
 
@@ -52,9 +72,13 @@ parse_expr(char *s, char **end)
         s++;
         expr->func.param_name = parse_sym(s, &s);
         if (*s != '.')
-            abort();
+            return error(PARSE_ERR_MISSING_DOT_SEPARATOR, s);
         s++;
-        expr->func.body = parse_expr(s, end);
+        expr->func.body = parse_list(s, end);
+        if (expr->func.body == NULL)
+            return NULL;
+        if (expr->func.body->tag == EXPR_PARSE_ERROR)
+            return expr->func.body;
         return expr;
     }
     else if (*s == '(')
@@ -62,7 +86,7 @@ parse_expr(char *s, char **end)
         s++;
         expr_t *expr = parse_list(s, &s);
         if (*s != ')')
-            abort();
+            return error(PARSE_ERR_MISSING_CLOSING_PARENTHESIS, s);
         s++;
         *end = s;
         return expr;
@@ -72,7 +96,9 @@ parse_expr(char *s, char **end)
         expr_t *expr = expr_new(EXPR_VAR);
         expr->var.name = parse_sym(s, end);
         if (expr->var.name == NULL)
-            abort();
+            return NULL;
+        if (strlen(expr->var.name) == 0)
+            return error(PARSE_ERR_UNEXPECTED_END, s);
         return expr;
     }
 }
@@ -82,11 +108,14 @@ parse(char *s)
 {
     char   *end;
     expr_t *expr = parse_list(s, &end);
+    if (expr->tag == EXPR_PARSE_ERROR)
+        return expr;
     skip_spaces(&end);
     if (*end != '\0')
     {
-        fprintf(stderr, "extra characters `%s`\n", end);
-        abort();
+        if (*end == ')')
+            return error(PARSE_ERR_MISSING_OPENING_PARENTHESIS, end);
+        return error(PARSE_ERR_EXTRA_CHARACTER, end);
     }
     return expr;
 }

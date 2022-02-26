@@ -16,24 +16,21 @@ expr_destroy(expr_t *expr)
 {
     switch (expr->tag)
     {
-        case EXPR_FUNC:
-            free(expr->func.param_name);
-            expr_destroy(expr->func.body);
-            break;
-        case EXPR_VAR:
-            free(expr->var.name);
-            break;
-        case EXPR_LIST:
-            for (size_t i = 0; i < expr->list.len; i++)
-                expr_destroy(expr->list.exprs[i]);
-            free(expr->list.exprs);
-            break;
-        case EXPR_STMT:
-            free(expr->stmt.name);
-            expr_destroy(expr->stmt.expr);
-            break;
-        case EXPR_PARSE_ERROR:
-            break;
+    case EXPR_FUNC:
+        free(expr->func.param_name);
+        expr_destroy(expr->func.body);
+        break;
+    case EXPR_VAR: free(expr->var.name); break;
+    case EXPR_LIST:
+        for (size_t i = 0; i < expr->list.len; i++)
+            expr_destroy(expr->list.exprs[i]);
+        free(expr->list.exprs);
+        break;
+    case EXPR_STMT:
+        free(expr->stmt.name);
+        expr_destroy(expr->stmt.expr);
+        break;
+    case EXPR_PARSE_ERROR: break;
     }
     free(expr);
 }
@@ -65,9 +62,11 @@ expr_print(expr_t *expr)
             if (i != expr->list.len - 1)
                 fputc(' ', stdout);
         }
+        break;
     case EXPR_STMT:
         printf("%s := ", expr->stmt.name);
         expr_print(expr->stmt.expr);
+        break;
     case EXPR_PARSE_ERROR:
         fputs("Cannot print error expr", stderr);
         abort();
@@ -80,4 +79,40 @@ expr_println(expr_t *expr)
 {
     expr_print(expr);
     fputc('\n', stdout);
+}
+
+static void
+expr_print_tree_rec(expr_t *expr, size_t indent)
+{
+    for (size_t i = 0; i < indent; i++)
+        fputc(' ', stdout);
+    switch (expr->tag)
+    {
+    case EXPR_VAR: printf("[var %s]\n", expr->var.name); break;
+    case EXPR_FUNC:
+        printf("[func %s]\n", expr->func.param_name);
+        expr_print_tree_rec(expr->func.body, indent + 2);
+        break;
+    case EXPR_LIST:
+        printf("[list (len=%zu)]\n", expr->list.len);
+        for (size_t i = 0; i < expr->list.len; i++)
+            expr_print_tree_rec(expr->list.exprs[i], indent + 2);
+        break;
+    case EXPR_STMT:
+        printf("[stmt %s]\n", expr->stmt.name);
+        expr_print_tree_rec(expr->stmt.expr, indent + 2);
+        break;
+    case EXPR_PARSE_ERROR:
+        printf("[parse error (kind=%d) (location=%p=\"%s\")]\n",
+               expr->error.kind,
+               expr->error.location,
+               expr->error.location);
+        break;
+    }
+}
+
+void
+expr_print_tree(expr_t *expr)
+{
+    expr_print_tree_rec(expr, 0);
 }

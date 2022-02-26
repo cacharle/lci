@@ -39,6 +39,11 @@
 int
 main(int argc, char **argv)
 {
+    expr_t *expr = parse( "(foo ((bar baz) qux)");
+    expr_print_tree(expr);
+
+    return 0;
+
     if (argc == 3 && strcmp(argv[1], "-c") == 0)
     {
         // eval_print(argv[2]);

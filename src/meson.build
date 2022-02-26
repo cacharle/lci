@@ -1,3 +1,5 @@
 sources = files(
-  'lci.c',
+  'expr.c',
+  'parse.c',
+  'main.c',
 )

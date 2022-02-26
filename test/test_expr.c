@@ -1,7 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
-#include <string.h>
-#include <criterion/criterion.h>
 #include "expr.h"
+#include <criterion/criterion.h>
+#include <string.h>
 
 Test(expr, new_func)
 {
@@ -62,7 +62,7 @@ Test(expr, destroy_list)
 {
     expr_t *expr = expr_new(EXPR_LIST);
     expr->list.len = 2;
-    expr->list.exprs = malloc(sizeof(expr_t*) * expr->list.len);
+    expr->list.exprs = malloc(sizeof(expr_t *) * expr->list.len);
     expr->list.exprs[0] = expr_new(EXPR_VAR);
     expr->list.exprs[0]->var.name = strdup("foo");
     expr->list.exprs[1] = expr_new(EXPR_VAR);
