@@ -32,6 +32,16 @@ Test(expr, new_list)
     free(expr);
 }
 
+Test(expr, new_stmt)
+{
+    expr_t *expr = expr_new(EXPR_STMT);
+    cr_assert_not_null(expr);
+    cr_assert_eq(expr->tag, EXPR_STMT);
+    cr_assert_null(expr->stmt.name);
+    cr_assert_null(expr->stmt.expr);
+    free(expr);
+}
+
 Test(expr, destroy_func)
 {
     expr_t *expr = expr_new(EXPR_FUNC);
@@ -57,5 +67,22 @@ Test(expr, destroy_list)
     expr->list.exprs[0]->var.name = strdup("foo");
     expr->list.exprs[1] = expr_new(EXPR_VAR);
     expr->list.exprs[1]->var.name = strdup("bar");
+    expr_destroy(expr);
+}
+
+Test(expr, destroy_stmt)
+{
+    expr_t *expr = expr_new(EXPR_STMT);
+    expr->stmt.name = strdup("foo");
+    expr->stmt.expr = expr_new(EXPR_VAR);
+    expr->stmt.expr->var.name = strdup("foo");
+    expr_destroy(expr);
+}
+
+Test(expr, destroy_parse_error)
+{
+    expr_t *expr = expr_new(EXPR_PARSE_ERROR);
+    expr->error.location = "don't free me";
+    expr->error.kind = PARSE_ERR_EXTRA_CHARACTER;
     expr_destroy(expr);
 }

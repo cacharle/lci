@@ -28,6 +28,12 @@ expr_destroy(expr_t *expr)
                 expr_destroy(expr->list.exprs[i]);
             free(expr->list.exprs);
             break;
+        case EXPR_STMT:
+            free(expr->stmt.name);
+            expr_destroy(expr->stmt.expr);
+            break;
+        case EXPR_PARSE_ERROR:
+            break;
     }
     free(expr);
 }
@@ -59,6 +65,12 @@ expr_print(expr_t *expr)
             if (i != expr->list.len - 1)
                 fputc(' ', stdout);
         }
+    case EXPR_STMT:
+        printf("%s := ", expr->stmt.name);
+        expr_print(expr->stmt.expr);
+    case EXPR_PARSE_ERROR:
+        fputs("Cannot print error expr", stderr);
+        abort();
         break;
     }
 }

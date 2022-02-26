@@ -5,11 +5,19 @@
 #include <stdlib.h>
 #include <string.h>
 
+enum parse_error
+{
+    PARSE_ERR_MEMORY,
+    PARSE_ERR_EXTRA_CHARACTER,
+};
+
 enum expr_tag
 {
     EXPR_FUNC,
     EXPR_VAR,
     EXPR_LIST,
+    EXPR_STMT,
+    EXPR_PARSE_ERROR,
 };
 
 typedef struct expr
@@ -31,6 +39,16 @@ typedef struct expr
             size_t        len;
             struct expr **exprs;
         } list;
+        struct
+        {
+            char   *name;
+            struct expr *expr;
+        } stmt;
+        struct
+        {
+            enum parse_error kind;
+            char            *location;
+        } error;
     };
 } expr_t;
 

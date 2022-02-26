@@ -1,6 +1,8 @@
 test_sources = files(
   'test_expr.c',
+  'test_parse.c',
   '../src/expr.c',
+  '../src/parse.c',
 )
 
 cc = meson.get_compiler('c')
