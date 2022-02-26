@@ -72,6 +72,7 @@ parse_expr(char *s, char **end)
         expr_t *expr = expr_new(EXPR_FUNC);
         s++;
         expr->func.param_name = parse_sym(s, &s);
+        skip_spaces(&s);
         if (*s != '.')
             return error(PARSE_ERR_MISSING_DOT_SEPARATOR, s);
         s++;

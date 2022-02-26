@@ -166,7 +166,7 @@ Test(parse, error_func_not_dot)
     cr_assert_not_null(expr);
     cr_assert_eq(expr->tag, EXPR_PARSE_ERROR);
     cr_assert_eq(expr->error.kind, PARSE_ERR_MISSING_DOT_SEPARATOR);
-    cr_assert_str_eq(expr->error.location, s + strlen("\\foo"));
+    cr_assert_str_eq(expr->error.location, s + strlen("\\foo "));
     expr_destroy(expr);
 }
 
@@ -188,7 +188,7 @@ Test(parse, spaces_trimed)
 //     cr_assert_eq(expr->list.len, 0);
 // }
 
-Test(parse, function_dot_edge_case)
+Test(parse, function_space_before_dot_not_error)
 {
     expr_t *expr = parse("\\x .x");
     cr_assert_not_null(expr);
