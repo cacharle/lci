@@ -38,6 +38,28 @@ Test(parse, list_basic)
     expr_destroy(expr);
 }
 
+Test(parse, stmt_basic)
+{
+    expr_t *expr = parse("foo := bar");
+    cr_assert_not_null(expr);
+    cr_assert_eq(expr->tag, EXPR_STMT);
+    cr_assert_str_eq(expr->stmt.name, "foo");
+    cr_assert_eq(expr->stmt.expr->tag, EXPR_VAR);
+    cr_assert_str_eq(expr->stmt.expr->var.name, "bar");
+}
+
+Test(parse, stmt_func)
+{
+    expr_t *expr = parse("foo := \\bar. baz");
+    cr_assert_not_null(expr);
+    cr_assert_eq(expr->tag, EXPR_STMT);
+    cr_assert_str_eq(expr->stmt.name, "foo");
+    cr_assert_eq(expr->stmt.expr->tag, EXPR_FUNC);
+    cr_assert_str_eq(expr->stmt.expr->func.param_name, "bar");
+    cr_assert_eq(expr->stmt.expr->func.body->tag, EXPR_VAR);
+    cr_assert_str_eq(expr->stmt.expr->func.body->var.name, "baz");
+}
+
 Test(parse, nested_func)
 {
     expr_t *expr = parse("\\foo. \\bar. \\baz. foo bar baz");
@@ -103,7 +125,7 @@ Test(parse, parenthesis_nested)
 
 Test(parse, error_function_no_body)
 {
-    char *s = "\\foo. ";
+    char   *s = "\\foo. ";
     expr_t *expr = parse(s);
     cr_assert_not_null(expr);
     cr_assert_eq(expr->tag, EXPR_PARSE_ERROR);
@@ -114,7 +136,7 @@ Test(parse, error_function_no_body)
 
 Test(parse, error_parenthesis_not_closed)
 {
-    char *s = "(foo ((bar baz) qux)";
+    char   *s = "(foo ((bar baz) qux)";
     expr_t *expr = parse(s);
     cr_assert_not_null(expr);
     cr_assert_eq(expr->tag, EXPR_PARSE_ERROR);
@@ -125,18 +147,21 @@ Test(parse, error_parenthesis_not_closed)
 
 Test(parse, error_parenthesis_not_opened)
 {
-    char *s = "foo bar)";
+    char   *s = "foo bar)";
     expr_t *expr = parse(s);
     cr_assert_not_null(expr);
     cr_assert_eq(expr->tag, EXPR_PARSE_ERROR);
-    cr_assert_eq(expr->error.kind, PARSE_ERR_MISSING_OPENING_PARENTHESIS, "actual: %d\n", expr->error.kind);
+    cr_assert_eq(expr->error.kind,
+                 PARSE_ERR_MISSING_OPENING_PARENTHESIS,
+                 "actual: %d\n",
+                 expr->error.kind);
     cr_assert_str_eq(expr->error.location, s + strlen(s) - 1);
     expr_destroy(expr);
 }
 
 Test(parse, error_func_not_dot)
 {
-    char *s = "\\foo bar";
+    char   *s = "\\foo bar";
     expr_t *expr = parse(s);
     cr_assert_not_null(expr);
     cr_assert_eq(expr->tag, EXPR_PARSE_ERROR);
@@ -145,12 +170,27 @@ Test(parse, error_func_not_dot)
     expr_destroy(expr);
 }
 
-Test(parse, spaces)
+Test(parse, spaces_trimed)
 {
     expr_t *expr = parse(" \t \t  foo   \t\t \t ");
-    expr_print_tree(expr);
     cr_assert_not_null(expr);
     cr_assert_eq(expr->tag, EXPR_VAR);
     cr_assert_str_eq(expr->var.name, "foo");
     expr_destroy(expr);
+}
+
+// Test(parse, empty)
+// {
+//     expr_t *expr = parse(" \t \t  \t\t \t ");
+//     expr_print_tree(expr);
+//     cr_assert_not_null(expr);
+//     cr_assert_eq(expr->tag, EXPR_LIST, "actual: %d", expr->tag);
+//     cr_assert_eq(expr->list.len, 0);
+// }
+
+Test(parse, function_dot_edge_case)
+{
+    expr_t *expr = parse("\\x .x");
+    cr_assert_not_null(expr);
+    cr_assert_neq(expr->tag, EXPR_PARSE_ERROR);
 }

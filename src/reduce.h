@@ -27,4 +27,6 @@ typedef struct
 expr_t *
 reduce(expr_t *expr);
 
+void globals_binginds_push(char *name, expr_t *expr);
+
 #endif

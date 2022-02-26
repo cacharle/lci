@@ -13,24 +13,9 @@ eval_print(char *s)
 {
     expr_t *expr = parse(s);
     if (expr->tag == EXPR_PARSE_ERROR)
-    {
         parse_error_print(expr->error.kind, expr->error.location, s);
-        return;
-    }
-    // if (result->tag == PARSE_STMT)
-    // {
-    //     result->stmt.expr = reduce(result->stmt.expr);
-    //     push_binding(&globals, &globals_len, parsed->stmt.name,
-    //     parsed->stmt->expr); return;
-    //     // skip_spaces(&s);
-    //     // char *name = parse_sym(s, &s);
-    //     // if (name != NULL)
-    //     //     abort();
-    //     // skip_spaces(&s);
-    //     // if (strncmp(s, ":=", 2) != 0)
-    //     //     abort();
-    // }
-    expr_println(reduce(parse(s)));
+    else
+        expr_println(reduce(parse(s)));
 }
 
 /*

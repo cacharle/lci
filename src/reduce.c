@@ -12,6 +12,11 @@ bindings_push(bindings_t *bindings, char *name, expr_t *expr)
     bindings->exprs[bindings->len - 1].expr = expr;
 }
 
+void globals_binginds_push(char *name, expr_t *expr)
+{
+    bindings_push(&env.globals, name, expr);
+}
+
 expr_t *
 bindings_search(bindings_t *bindings, char *name)
 {
@@ -35,7 +40,11 @@ reduce(expr_t *expr)
         if (found != NULL)
             return reduce(found);
         return expr;
-    case EXPR_FUNC: expr->func.body = reduce(expr->func.body); return expr;
+    case EXPR_FUNC:
+        bindings_push(&env.stack, expr->func.param_name, NULL);
+        expr->func.body = reduce(expr->func.body);
+        env.stack.len--;
+        return expr;
     case EXPR_LIST:
         if (expr->list.len == 1)
             return expr->list.exprs[0];
@@ -50,6 +59,13 @@ reduce(expr_t *expr)
         expr->list.len--;
         memmove(&expr->list.exprs[1], &expr->list.exprs[2], expr->list.len);
         return reduce(expr);
+    case EXPR_STMT:
+        expr->stmt.expr = reduce(expr->stmt.expr);
+        bindings_push(&env.globals, expr->stmt.name, expr->stmt.expr);
+        return expr;
+    case EXPR_PARSE_ERROR:
+        fputs("Cannot reduce parsing error expr\n", stderr);
+        abort();
     }
     return NULL;
 }

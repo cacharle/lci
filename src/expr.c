@@ -14,6 +14,8 @@ expr_new(enum expr_tag tag)
 void
 expr_destroy(expr_t *expr)
 {
+    if (expr == NULL)
+        return;
     switch (expr->tag)
     {
     case EXPR_FUNC:
