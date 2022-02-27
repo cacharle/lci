@@ -194,3 +194,23 @@ Test(parse, function_space_before_dot_not_error)
     cr_assert_not_null(expr);
     cr_assert_neq(expr->tag, EXPR_PARSE_ERROR);
 }
+
+Test(parse, stmt_no_space_after_op)
+{
+    expr_t *expr = parse("foo :=bar");
+    cr_assert_not_null(expr);
+    cr_assert_eq(expr->tag, EXPR_STMT);
+    cr_assert_str_eq(expr->stmt.name, "foo");
+    cr_assert_eq(expr->stmt.expr->tag, EXPR_VAR);
+    cr_assert_str_eq(expr->stmt.expr->var.name, "bar");
+}
+
+Test(parse, stmt_no_space_before_op)
+{
+    expr_t *expr = parse("foo:= bar");
+    cr_assert_not_null(expr);
+    cr_assert_eq(expr->tag, EXPR_STMT);
+    cr_assert_str_eq(expr->stmt.name, "foo");
+    cr_assert_eq(expr->stmt.expr->tag, EXPR_VAR);
+    cr_assert_str_eq(expr->stmt.expr->var.name, "bar");
+}

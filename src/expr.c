@@ -56,9 +56,8 @@ expr_eq(const expr_t *a, const expr_t *b)
     {
     case EXPR_FUNC:
         return strcmp(a->func.param_name, b->func.param_name) == 0 &&
-            expr_eq(a->func.body, b->func.body);
-    case EXPR_VAR:
-        return strcmp(a->var.name, b->var.name) == 0;
+               expr_eq(a->func.body, b->func.body);
+    case EXPR_VAR: return strcmp(a->var.name, b->var.name) == 0;
     case EXPR_LIST:
         if (a->list.len != b->list.len)
             return false;
@@ -68,10 +67,10 @@ expr_eq(const expr_t *a, const expr_t *b)
         return true;
     case EXPR_STMT:
         return strcmp(a->stmt.name, b->stmt.name) == 0 &&
-            expr_eq(a->stmt.expr, b->stmt.expr);
+               expr_eq(a->stmt.expr, b->stmt.expr);
     case EXPR_PARSE_ERROR:
         return a->error.kind == b->error.kind &&
-            a->error.location == b->error.location;
+               a->error.location == b->error.location;
     }
     return false;
 }

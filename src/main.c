@@ -28,7 +28,8 @@ eval_print(char *s)
 int
 main(int argc, char **argv)
 {
-    reduce(parse("TRUE  := \\x. \\y. x"));
+    reduce(parse("TRUE := \\x. \\y. x"));
+    // expr_t *expr = reduce(parse("(\\x. \\y. x) (\\x. \\y. x)"));
     expr_t *expr = reduce(parse("TRUE TRUE"));
     expr_print(expr);
     return 0;

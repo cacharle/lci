@@ -23,7 +23,7 @@ parse_sym(char *s, char **end)
 {
     char *curr = s;
     while (*curr != '\0' && *curr != '.' && *curr != '(' && *curr != ')' &&
-           !isspace(*curr))
+           strncmp(curr, ":=", 2) != 0 && !isspace(*curr))
         curr++;
     char *ret = strndup(s, curr - s);
     *end = curr;
@@ -154,7 +154,7 @@ parse_error_print(enum parse_error kind, char *location, const char *origin)
 {
     fprintf(stderr, "Error: %s\n", parse_error_lookup[kind]);
     fprintf(stderr, "%s\n", origin);
-    if (location != NULL)
+    if (location != NULL && origin != NULL)
     {
         for (; origin != location; origin++)
             fputc(' ', stderr);
