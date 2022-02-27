@@ -1,0 +1,14 @@
+/* :print OR TRUE TRUE */
+/* :print OR TRUE FALSE */
+/* :print OR FALSE TRUE */
+/* :print OR FALSE FALSE */
+
+#id (not true)
+
+:print 0
+:print 1
+:print 2
+
+:print succ 0
+:print succ 1
+:print succ 2

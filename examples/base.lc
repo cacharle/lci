@@ -1,0 +1,51 @@
+# combinator is a function with no free variable (no argument from the outside)
+
+# idiot bird, identity combinator
+I := \x. x
+
+# mockingbird, self-application combinator
+M := \f. f f
+
+# kestrel (const in Haskell)
+K := \a. \b. a
+
+# kite (`const id` in Haskell)
+KI := K I
+
+# cardinal (flip in Haskell)
+C := \f. \a. \b. f b a
+
+TRUE  := K
+FALSE := KI
+NOT   := C
+
+AND := \a. \b. a b a
+
+# \a. \b. a a b >curry> \a. aa > M
+OR := M
+
+#       a
+#      / \
+#     t   f
+#     |   |
+#     b   (NOT b)
+#    /\       /\
+#   t  f     t  f
+#   |  |     |  |
+#   t  f     f  t
+XOR := \a. \b. a b (NOT b)
+BOOLEQ := XOR
+
+0 := \f. \a. a    # == K or FALSE
+1 := \f. \a. f a  # == I
+2 := \f. \a. f (f a)
+
+# n times f a plus one more f before
+SUCC := \n. \f. \a. f (n f a)
+# or
+SUCC := \n. \f. \a. B f (n f)
+
+# bluebird, composition combinator
+B := \f. \g. \a. f (g a)
+
+ADD := \n. \m. n SUCC m
