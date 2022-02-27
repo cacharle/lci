@@ -23,7 +23,7 @@ parse_sym(char *s, char **end)
 {
     char *curr = s;
     while (*curr != '\0' && *curr != '.' && *curr != '(' && *curr != ')' &&
-           strncmp(curr, ":=", 2) != 0 && !isspace(*curr))
+           *curr != '\\' && strncmp(curr, ":=", 2) != 0 && !isspace(*curr))
         curr++;
     char *ret = strndup(s, curr - s);
     *end = curr;

@@ -214,3 +214,18 @@ Test(parse, stmt_no_space_before_op)
     cr_assert_eq(expr->stmt.expr->tag, EXPR_VAR);
     cr_assert_str_eq(expr->stmt.expr->var.name, "bar");
 }
+
+Test(parse, no_space_before_lambda)
+{
+    expr_t *expr = parse("baz\\foo.bar");
+    cr_assert_not_null(expr);
+    cr_assert_eq(expr->tag, EXPR_LIST);
+    cr_assert_eq(expr->list.exprs[0]->tag, EXPR_VAR);
+    cr_assert_str_eq(expr->list.exprs[0]->var.name, "baz");
+    cr_assert_eq(expr->list.exprs[1]->tag, EXPR_FUNC);
+    cr_assert_str_eq(expr->list.exprs[1]->func.param_name, "foo");
+    cr_assert_not_null(expr->list.exprs[1]->func.body);
+    cr_assert_eq(expr->list.exprs[1]->func.body->tag, EXPR_VAR);
+    cr_assert_str_eq(expr->list.exprs[1]->func.body->var.name, "bar");
+    expr_destroy(expr);
+}
