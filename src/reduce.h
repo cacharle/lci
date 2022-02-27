@@ -14,7 +14,7 @@ typedef struct
 
 typedef struct
 {
-    binding_t *exprs;
+    binding_t *data;
     size_t     len;
 } bindings_t;
 
@@ -24,8 +24,10 @@ typedef struct
     bindings_t globals;
 } env_t;
 
+extern env_t env;
+
 expr_t *
-reduce(expr_t *expr);
+reduce(const expr_t *input_expr);
 
 void
 globals_binginds_push(char *name, expr_t *expr);

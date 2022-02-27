@@ -1,6 +1,7 @@
 #ifndef LCI_EXPR_H
 #define LCI_EXPR_H
 
+#define _POSIX_C_SOURCE 200809L
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
