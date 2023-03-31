@@ -50,11 +50,9 @@ expr_clone(const expr_t *expr)
         clone->func.param_name = strdup(expr->func.param_name);
         clone->func.body = expr_clone(expr->func.body);
         break;
-    case EXPR_VAR:
-        clone->var.name = strdup(expr->var.name);
-        break;
+    case EXPR_VAR: clone->var.name = strdup(expr->var.name); break;
     case EXPR_LIST:
-        clone->list.exprs = malloc(sizeof(expr_t*) * expr->list.len);
+        clone->list.exprs = malloc(sizeof(expr_t *) * expr->list.len);
         for (size_t i = 0; i < expr->list.len; i++)
             clone->list.exprs[i] = expr_clone(expr->list.exprs[i]);
         break;
@@ -62,9 +60,7 @@ expr_clone(const expr_t *expr)
         clone->stmt.name = strdup(expr->stmt.name);
         clone->stmt.expr = expr_clone(expr->stmt.expr);
         break;
-    case EXPR_PARSE_ERROR:
-        fputs("Cannot clone parse error expr\n", stderr);
-        abort();
+    case EXPR_PARSE_ERROR: fputs("Cannot clone parse error expr\n", stderr); abort();
     }
     return clone;
 }

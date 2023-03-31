@@ -1,8 +1,7 @@
 #include "reduce.h"
 #include "parse.h"
 
-env_t env = {.stack = {.data = NULL, .len = 0},
-             .globals = {.data = NULL, .len = 0}};
+env_t env = {.stack = {.data = NULL, .len = 0}, .globals = {.data = NULL, .len = 0}};
 
 void
 bindings_push(bindings_t *bindings, char *name, expr_t *expr)

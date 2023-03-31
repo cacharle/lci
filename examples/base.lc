@@ -49,3 +49,5 @@ SUCC := \n. \f. \a. B f (n f)
 B := \f. \g. \a. f (g a)
 
 ADD := \n. \m. n SUCC m
+
+# vim:commentstring=#%s:ft=conf

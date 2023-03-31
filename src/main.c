@@ -1,13 +1,15 @@
 #include "parse.h"
 #include "reduce.h"
 #include <ctype.h>
+#include <errno.h>
+#include <limits.h>
 #include <readline/history.h>
 #include <readline/readline.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 void
@@ -43,9 +45,10 @@ eval_print(char *s)
 
 const char *print_command = ":print";
 
-void eval_file(FILE *file)
+void
+eval_file(FILE *file)
 {
-    char *line = NULL;
+    char  *line = NULL;
     size_t line_len = 0;
     while (getline(&line, &line_len, file) != -1)
     {
@@ -83,16 +86,22 @@ void eval_file(FILE *file)
  */
 
 int
-main(int argc, char **argv)
+main(int argc, char **argv, char **environment)
 {
+    char   history_path[PATH_MAX] = {'\0'};
+    char  *xdg_cache_home_str = "XDG_CACHE_HOME";
+    size_t xdg_cache_home_str_len = strlen(xdg_cache_home_str);
+    for (; *environment != NULL; environment++)
+    {
+        if (strncmp(*environment, xdg_cache_home_str, xdg_cache_home_str_len) == 0)
+            strcpy(history_path, *environment + xdg_cache_home_str_len + 1);
+    }
     int option;
-    while ((option = getopt(argc, argv, "")) > 0)
+    while ((option = getopt(argc, argv, "c:")) > 0)
     {
         switch (option)
         {
-            case 'c':
-                eval_print(argv[2]);
-                return 0;
+        case 'c': eval_print(argv[2]); return 0;
         }
     }
     if (argc == 3 && strcmp(argv[1], "-c") == 0)
@@ -105,6 +114,22 @@ main(int argc, char **argv)
             eval_file(stdin);
             return 0;
         }
+        using_history();
+        stifle_history(1000);
+        strcat(history_path, "/lci");
+        struct stat stat_buf;
+        if (stat(history_path, &stat_buf) != 0)
+        {
+            if (errno == ENOENT)
+                mkdir(history_path, 0755);
+            else
+            {
+                perror("lci: ");
+                return 1;
+            }
+        }
+        strcat(history_path, "/history");
+        read_history(history_path);
         char *line = NULL;
         while (true)
         {
@@ -118,6 +143,7 @@ main(int argc, char **argv)
             eval_print(line);
             fputc('\n', stdout);
         }
+        write_history(history_path);
         free(line);
         return 0;
     }
@@ -127,12 +153,14 @@ main(int argc, char **argv)
         FILE *file = fopen(argv[i], "r");
         if (file == NULL)
         {
-            fprintf(stderr, "lci: Error while opening %s: %s\n", argv[i], strerror(errno));
+            fprintf(stderr,
+                    "lci: Error while opening %s: %s\n",
+                    argv[i],
+                    strerror(errno));
             continue;
         }
         eval_file(file);
         fclose(file);
     }
-
     return 0;
 }
